@@ -26,71 +26,51 @@ export default function Dashboard() {
         .from('enquiries')
         .select('*')
         .order('created_at', { ascending: false })
+
       console.log('data:', data)
       console.log('error:', error)
+
       if (data) setEnquiries(data)
       setLoading(false)
     }
+
     fetchEnquiries()
   }, [])
 
-  if (loading) return (
-    <div style={{ background:'#0a0a0f', minHeight:'100vh', 
-    display:'flex', alignItems:'center', justifyContent:'center', 
-    color:'white' }}>
-      Loading enquiries...
-    </div>
-  )
+  if (loading) return <div style={{color:'white',padding:'40px'}}>Loading...</div>
 
   return (
-    <div style={{ background:'#0a0a0f', minHeight:'100vh', 
-    padding:'40px', color:'white', fontFamily:'sans-serif' }}>
-      
-      <div style={{ marginBottom:'32px' }}>
-        <h1 style={{ fontSize:'28px', fontWeight:'600', margin:0 }}>
-          One'O'One — Enquiries
-        </h1>
-        <p style={{ color:'rgba(255,255,255,0.4)', fontSize:'14px', 
-        marginTop:'4px' }}>
-          {enquiries.length} submission{enquiries.length !== 1 ? 's' : ''}
-        </p>
-      </div>
-
+    <div style={{ background: '#0a0a0f', minHeight: '100vh', padding: '40px', color: 'white' }}>
+      <h1 style={{ fontSize: '24px', marginBottom: '32px' }}>
+        One'O'One — Enquiries ({enquiries.length})
+      </h1>
       {enquiries.length === 0 ? (
-        <div style={{ textAlign:'center', padding:'80px', 
-        color:'rgba(255,255,255,0.4)' }}>
-          No enquiries yet.
-        </div>
+        <p style={{ color: 'rgba(255,255,255,0.5)' }}>No enquiries found.</p>
       ) : (
-        <div style={{ display:'flex', flexDirection:'column', gap:'16px' }}>
-          {enquiries.map((e) => (
-            <div key={e.id} style={{ 
-              background:'rgba(255,255,255,0.04)', 
-              border:'1px solid rgba(255,255,255,0.08)',
-              borderRadius:'12px', padding:'24px' 
-            }}>
-              <div style={{ display:'flex', justifyContent:'space-between', 
-              marginBottom:'12px' }}>
-                <div>
-                  <div style={{ fontSize:'16px', fontWeight:'600' }}>
-                    {e.name}
-                  </div>
-                  <div style={{ color:'rgba(255,255,255,0.5)', fontSize:'13px' }}>
-                    {e.email} {e.phone ? `· ${e.phone}` : ''}
-                  </div>
-                </div>
-                <div style={{ color:'rgba(255,255,255,0.3)', fontSize:'12px' }}>
+        <table style={{ width: '100%', borderCollapse: 'collapse' }}>
+          <thead>
+            <tr style={{ borderBottom: '1px solid rgba(255,255,255,0.1)' }}>
+              <th style={{ textAlign:'left', padding:'12px', color:'rgba(255,255,255,0.5)', fontSize:'12px' }}>NAME</th>
+              <th style={{ textAlign:'left', padding:'12px', color:'rgba(255,255,255,0.5)', fontSize:'12px' }}>EMAIL</th>
+              <th style={{ textAlign:'left', padding:'12px', color:'rgba(255,255,255,0.5)', fontSize:'12px' }}>PHONE</th>
+              <th style={{ textAlign:'left', padding:'12px', color:'rgba(255,255,255,0.5)', fontSize:'12px' }}>DETAILS</th>
+              <th style={{ textAlign:'left', padding:'12px', color:'rgba(255,255,255,0.5)', fontSize:'12px' }}>DATE</th>
+            </tr>
+          </thead>
+          <tbody>
+            {enquiries.map((e) => (
+              <tr key={e.id} style={{ borderBottom: '1px solid rgba(255,255,255,0.05)' }}>
+                <td style={{ padding:'12px' }}>{e.name}</td>
+                <td style={{ padding:'12px' }}>{e.email}</td>
+                <td style={{ padding:'12px' }}>{e.phone || '—'}</td>
+                <td style={{ padding:'12px' }}>{e.details}</td>
+                <td style={{ padding:'12px', color:'rgba(255,255,255,0.4)', fontSize:'12px' }}>
                   {new Date(e.created_at).toLocaleString()}
-                </div>
-              </div>
-              <div style={{ color:'rgba(255,255,255,0.7)', fontSize:'14px', 
-              lineHeight:'1.6', borderTop:'1px solid rgba(255,255,255,0.06)', 
-              paddingTop:'12px' }}>
-                {e.details}
-              </div>
-            </div>
-          ))}
-        </div>
+                </td>
+              </tr>
+            ))}
+          </tbody>
+        </table>
       )}
     </div>
   )
