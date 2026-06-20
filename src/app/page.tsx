@@ -21,8 +21,10 @@ export default function Dashboard() {
   const [password, setPassword] = useState('');
   const [authError, setAuthError] = useState('');
   const [authLoading, setAuthLoading] = useState(false);
+  const [dataLoading, setDataLoading] = useState(true);
 
   const fetchEnquiries = async () => {
+    setDataLoading(true);
     try {
       const { data, error } = await supabase
         .from('enquiries')
@@ -32,26 +34,32 @@ export default function Dashboard() {
       if (error) {
         console.error('Error fetching enquiries:', error.message);
       } else if (data) {
+        console.log('Successfully fetched enquiries:', data);
         setEnquiries(data);
       }
     } catch (err) {
       console.error('Failed to fetch enquiries:', err);
+    } finally {
+      setDataLoading(false);
     }
   };
 
+  // Monitor enquiries state changes in console
   useEffect(() => {
-    // 1. Get initial session
-    supabase.auth.getSession().then(({ data: { session } }) => {
+    console.log('Current enquiries state in UI:', enquiries);
+  }, [enquiries]);
+
+  useEffect(() => {
+    let mounted = true;
+
+    // onAuthStateChange handles both initial session (via INITIAL_SESSION event) and changes
+    const { data: { subscription } } = supabase.auth.onAuthStateChange((event, session) => {
+      if (!mounted) return;
+      console.log('Auth state change event:', event, 'Has session:', !!session);
+      
       setSession(session);
       setLoading(false);
-      if (session) {
-        fetchEnquiries();
-      }
-    });
 
-    // 2. Listen to auth state changes
-    const { data: { subscription } } = supabase.auth.onAuthStateChange((_event, session) => {
-      setSession(session);
       if (session) {
         fetchEnquiries();
       } else {
@@ -60,6 +68,7 @@ export default function Dashboard() {
     });
 
     return () => {
+      mounted = false;
       subscription.unsubscribe();
     };
   }, []);
@@ -209,7 +218,12 @@ export default function Dashboard() {
         </div>
 
         {/* Enquiries View */}
-        {enquiries.length === 0 ? (
+        {dataLoading ? (
+          <div className="text-center py-20 bg-white/[0.02] border border-white/5 rounded-2xl flex flex-col items-center space-y-4">
+            <div className="w-8 h-8 border-2 border-[#00f0ff] border-t-transparent rounded-full animate-spin" />
+            <p className="text-sm tracking-widest uppercase text-zinc-400">Loading Enquiries...</p>
+          </div>
+        ) : enquiries.length === 0 ? (
           <div className="text-center py-20 bg-white/[0.02] border border-white/5 rounded-2xl flex flex-col items-center space-y-4">
             <div className="p-4 bg-white/5 rounded-full border border-white/10">
               <svg className="w-8 h-8 text-zinc-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
