@@ -126,8 +126,16 @@ export default function Dashboard() {
             <h1 className="text-2xl sm:text-3xl font-black tracking-wider uppercase text-white">
               ONE&apos;O&apos;ONE<span className="text-[#00f0ff]">.</span>
             </h1>
-            <p className="text-xs text-zinc-500 uppercase tracking-widest font-semibold">Admin Gateway</p>
           </div>
+
+          {(!process.env.NEXT_PUBLIC_SUPABASE_URL || 
+            process.env.NEXT_PUBLIC_SUPABASE_URL.includes('placeholder-url-for-build') ||
+            process.env.NEXT_PUBLIC_SUPABASE_URL === 'your_supabase_project_url' ||
+            process.env.NEXT_PUBLIC_SUPABASE_URL === '') && (
+            <div className="mb-6 text-xs text-amber-400 font-medium bg-amber-950/20 border border-amber-900/35 rounded-xl px-3.5 py-2.5 text-center leading-relaxed">
+              ⚠️ <strong>Configuration Required:</strong> Supabase variables are missing or using placeholders. Please add <code className="bg-white/5 px-1 py-0.5 rounded">NEXT_PUBLIC_SUPABASE_URL</code> and <code className="bg-white/5 px-1 py-0.5 rounded">NEXT_PUBLIC_SUPABASE_ANON_KEY</code> in Vercel settings, then <strong>trigger a re-deployment</strong>.
+            </div>
+          )}
 
           <form onSubmit={handleLogin} className="space-y-5">
             <div className="flex flex-col space-y-1.5">
