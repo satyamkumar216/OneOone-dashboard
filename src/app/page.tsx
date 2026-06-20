@@ -2,7 +2,6 @@
 
 import React, { useEffect, useState } from 'react';
 import { supabase } from '../lib/supabase';
-import { Session } from '@supabase/supabase-js';
 
 interface Enquiry {
   id: string;
@@ -14,13 +13,7 @@ interface Enquiry {
 }
 
 export default function Dashboard() {
-  const [session, setSession] = useState<Session | null>(null);
-  const [loading, setLoading] = useState(true);
   const [enquiries, setEnquiries] = useState<Enquiry[]>([]);
-  const [email, setEmail] = useState('');
-  const [password, setPassword] = useState('');
-  const [authError, setAuthError] = useState('');
-  const [authLoading, setAuthLoading] = useState(false);
   const [dataLoading, setDataLoading] = useState(true);
 
   const fetchEnquiries = async () => {
@@ -44,58 +37,9 @@ export default function Dashboard() {
     }
   };
 
-  // Monitor enquiries state changes in console
   useEffect(() => {
-    console.log('Current enquiries state in UI:', enquiries);
-  }, [enquiries]);
-
-  useEffect(() => {
-    let mounted = true;
-
-    // onAuthStateChange handles both initial session (via INITIAL_SESSION event) and changes
-    const { data: { subscription } } = supabase.auth.onAuthStateChange((event, session) => {
-      if (!mounted) return;
-      console.log('Auth state change event:', event, 'Has session:', !!session);
-      
-      setSession(session);
-      setLoading(false);
-
-      if (session) {
-        fetchEnquiries();
-      } else {
-        setEnquiries([]);
-      }
-    });
-
-    return () => {
-      mounted = false;
-      subscription.unsubscribe();
-    };
+    fetchEnquiries();
   }, []);
-
-  const handleLogin = async (e: React.FormEvent) => {
-    e.preventDefault();
-    setAuthError('');
-    setAuthLoading(true);
-    try {
-      const { error } = await supabase.auth.signInWithPassword({
-        email,
-        password,
-      });
-      if (error) {
-        setAuthError(error.message);
-      }
-    } catch (err) {
-      const message = err instanceof Error ? err.message : 'An unexpected error occurred.';
-      setAuthError(message);
-    } finally {
-      setAuthLoading(false);
-    }
-  };
-
-  const handleLogout = async () => {
-    await supabase.auth.signOut();
-  };
 
   const formatDate = (dateStr: string) => {
     try {
@@ -111,86 +55,6 @@ export default function Dashboard() {
     }
   };
 
-  if (loading) {
-    return (
-      <div className="min-h-screen bg-black flex items-center justify-center text-zinc-400 font-light">
-        <div className="flex flex-col items-center space-y-4">
-          <div className="w-8 h-8 border-2 border-[#00f0ff] border-t-transparent rounded-full animate-spin" />
-          <p className="text-sm tracking-widest uppercase">Initializing Dashboard...</p>
-        </div>
-      </div>
-    );
-  }
-
-  // If not logged in, render the login interface
-  if (!session) {
-    return (
-      <div className="min-h-screen bg-[#030303] flex items-center justify-center px-6 relative overflow-hidden">
-        {/* Ambient Glows */}
-        <div className="absolute top-1/4 left-1/4 w-[500px] h-[500px] rounded-full bg-[#00f0ff]/5 blur-[120px] pointer-events-none" />
-        <div className="absolute bottom-1/4 right-1/4 w-[500px] h-[500px] rounded-full bg-[#8b5cf6]/5 blur-[120px] pointer-events-none" />
-        
-        <div className="w-full max-w-md bg-white/[0.02] border border-white/5 rounded-2xl p-8 backdrop-blur-md shadow-2xl relative z-10">
-          <div className="text-center mb-8 space-y-2">
-            <h1 className="text-2xl sm:text-3xl font-black tracking-wider uppercase text-white">
-              ONE&apos;O&apos;ONE<span className="text-[#00f0ff]">.</span>
-            </h1>
-          </div>
-
-          {(!process.env.NEXT_PUBLIC_SUPABASE_URL || 
-            process.env.NEXT_PUBLIC_SUPABASE_URL.includes('placeholder-url-for-build') ||
-            process.env.NEXT_PUBLIC_SUPABASE_URL === 'your_supabase_project_url' ||
-            process.env.NEXT_PUBLIC_SUPABASE_URL === '') && (
-            <div className="mb-6 text-xs text-amber-400 font-medium bg-amber-950/20 border border-amber-900/35 rounded-xl px-3.5 py-2.5 text-center leading-relaxed">
-              ⚠️ <strong>Configuration Required:</strong> Supabase variables are missing or using placeholders. Please add <code className="bg-white/5 px-1 py-0.5 rounded">NEXT_PUBLIC_SUPABASE_URL</code> and <code className="bg-white/5 px-1 py-0.5 rounded">NEXT_PUBLIC_SUPABASE_ANON_KEY</code> in Vercel settings, then <strong>trigger a re-deployment</strong>.
-            </div>
-          )}
-
-          <form onSubmit={handleLogin} className="space-y-5">
-            <div className="flex flex-col space-y-1.5">
-              <label className="text-[10px] text-zinc-500 uppercase tracking-wider font-semibold">Email</label>
-              <input
-                type="email"
-                required
-                value={email}
-                onChange={(e) => setEmail(e.target.value)}
-                className="w-full bg-white/[0.04] border border-white/10 rounded-xl px-4 py-3 text-white text-sm focus:outline-none focus:border-[#00f0ff] transition-colors"
-                placeholder="admin@oneoone.agency"
-              />
-            </div>
-
-            <div className="flex flex-col space-y-1.5">
-              <label className="text-[10px] text-zinc-500 uppercase tracking-wider font-semibold">Password</label>
-              <input
-                type="password"
-                required
-                value={password}
-                onChange={(e) => setPassword(e.target.value)}
-                className="w-full bg-white/[0.04] border border-white/10 rounded-xl px-4 py-3 text-white text-sm focus:outline-none focus:border-[#00f0ff] transition-colors"
-                placeholder="••••••••"
-              />
-            </div>
-
-            {authError && (
-              <p className="text-xs text-red-400 font-medium bg-red-950/20 border border-red-900/35 rounded-lg px-3.5 py-2.5">
-                {authError}
-              </p>
-            )}
-
-            <button
-              type="submit"
-              disabled={authLoading}
-              className="w-full py-3.5 rounded-xl bg-gradient-to-r from-[#00f0ff] to-[#8b5cf6] text-white font-semibold text-xs tracking-widest uppercase hover:brightness-110 transition-all duration-300 disabled:opacity-50"
-            >
-              {authLoading ? 'Verifying...' : 'Authenticate'}
-            </button>
-          </form>
-        </div>
-      </div>
-    );
-  }
-
-  // If logged in, render the dashboard to view enquiries
   return (
     <div className="min-h-screen bg-[#030303] text-white p-6 sm:p-12 relative overflow-hidden">
       {/* Glows */}
@@ -208,13 +72,6 @@ export default function Dashboard() {
               Viewing submissions from One&apos;O&apos;One Agency
             </p>
           </div>
-
-          <button
-            onClick={handleLogout}
-            className="px-5 py-2.5 rounded-full border border-white/10 bg-white/5 text-xs font-semibold tracking-wider hover:bg-white/10 hover:border-white/20 transition-all self-start sm:self-center"
-          >
-            Sign Out
-          </button>
         </div>
 
         {/* Enquiries View */}
